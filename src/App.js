@@ -145,7 +145,7 @@ function App() {
             />
             <input
               type="text"
-              placeholder="📂 Subject (e.g. Science, Romance)"
+              placeholder="📂 Subject (e.g. Science, Maths , History)"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               className="border dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 p-2 rounded-md focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm"
