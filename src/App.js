@@ -1,79 +1,175 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function App() {
-  const [query, setQuery] = useState("");
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [subject, setSubject] = useState("");
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
 
-  const searchBooks = async (e) => {
+  // Persist theme
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") setDarkMode(true);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
+
+  const handleSearch = async (e) => {
     e.preventDefault();
-    if (!query.trim()) return;
-
     setLoading(true);
-    setError("");
+    setBooks([]);
+
     try {
-      const res = await fetch(`https://openlibrary.org/search.json?title=${query}`);
-      const data = await res.json();
-      setBooks(data.docs.slice(0, 10));
-    } catch (err) {
-      setError("Failed to fetch books. Try again later.");
+      let queryParts = [];
+      if (title) queryParts.push(`${title}`);
+      if (author) queryParts.push(`inauthor:${author}`);
+      if (subject) queryParts.push(`subject:${subject}`);
+
+      const query = queryParts.join("+");
+      const response = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=20`
+      );
+      const data = await response.json();
+
+      setBooks(data.items || []);
+    } catch (error) {
+      console.error("Error fetching books:", error);
     }
+
     setLoading(false);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center p-6">
-      <h1 className="text-3xl font-bold mb-6 text-blue-700">📚 Book Finder</h1>
+  const handleClear = () => {
+    setTitle("");
+    setAuthor("");
+    setSubject("");
+    setBooks([]);
+  };
 
-      <form onSubmit={searchBooks} className="flex gap-2 w-full max-w-md">
-        <input
-          type="text"
-          placeholder="Search for a book title..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="flex-grow p-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col transition-colors duration-500">
+      {/* Header */}
+      <header className="py-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-md text-center flex justify-between px-6 items-center">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md flex items-center gap-2">
+          📚 Book Finder
+        </h1>
         <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 rounded-lg hover:bg-blue-700"
+          onClick={() => setDarkMode(!darkMode)}
+          className="text-white text-2xl hover:scale-110 transition"
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
-          Search
+          {darkMode ? "☀️" : "🌙"}
         </button>
+      </header>
+
+      {/* Search Box */}
+      <form
+        onSubmit={handleSearch}
+        className="max-w-4xl w-11/12 mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 mt-8 rounded-2xl shadow-lg space-y-4 border border-gray-200 dark:border-gray-700 transition"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="🔖 Search by Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="border dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 p-3 rounded-md focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+          />
+          <input
+            type="text"
+            placeholder="✍️ Search by Author"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            className="border dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 p-3 rounded-md focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+          />
+          <input
+            type="text"
+            placeholder="📂 Search by Subject (e.g. Science, Romance)"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="border dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 p-3 rounded-md focus:ring-2 focus:ring-indigo-400 md:col-span-2 focus:outline-none"
+          />
+        </div>
+
+        <div className="flex gap-4 justify-center mt-4">
+          <button
+            type="submit"
+            className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-2 rounded-md hover:from-indigo-600 hover:to-purple-700 transition transform hover:scale-105"
+          >
+            {loading ? "Searching..." : "Search"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleClear}
+            className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-6 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition transform hover:scale-105"
+          >
+            Clear Filters
+          </button>
+        </div>
       </form>
 
-      {loading && <p className="mt-4 text-gray-600">Loading...</p>}
-      {error && <p className="mt-4 text-red-600">{error}</p>}
-
-      {!loading && books.length === 0 && query && !error && (
-        <p className="mt-4 text-gray-500">No books found.</p>
-      )}
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 w-full max-w-5xl">
-        {books.map((book) => (
-          <div key={book.key} className="bg-white p-4 shadow rounded-lg">
-            <img
-              src={
-                book.cover_i
-                  ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
-                  : "https://via.placeholder.com/150x200?text=No+Cover"
-              }
-              alt={book.title}
-              className="rounded-md mx-auto mb-3"
-            />
-            <h2 className="font-semibold text-lg">{book.title}</h2>
-            <p className="text-sm text-gray-700">
-              {book.author_name?.join(", ") || "Unknown Author"}
-            </p>
-            <p className="text-gray-500 text-sm">
-              First published: {book.first_publish_year || "N/A"}
-            </p>
-          </div>
-        ))}
+      {/* Results */}
+      <div className="grid gap-8 mt-10 px-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto pb-12">
+        {books.map((book, i) => {
+          const info = book.volumeInfo;
+          return (
+            <div
+              key={i}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-2xl transition-transform transform hover:-translate-y-2 duration-300 overflow-hidden border border-gray-100 dark:border-gray-700"
+            >
+              <img
+                src={
+                  info.imageLinks?.thumbnail ||
+                  "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                }
+                alt={info.title}
+                className="w-full h-60 object-cover"
+              />
+              <div className="p-4">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+                  {info.title}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {info.authors?.join(", ") || "Unknown Author"}
+                </p>
+                <p className="text-sm mt-3 text-gray-700 dark:text-gray-300 line-clamp-3">
+                  {info.description || "No description available."}
+                </p>
+                {info.publishedDate && (
+                  <p className="text-xs text-gray-400 mt-2">
+                    Published: {info.publishedDate}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <footer className="mt-10 text-gray-400 text-sm">
-        Built by <span className="text-blue-600 font-medium">Alex</span> 💻
+      {/* Empty State */}
+      {!loading && books.length === 0 && (
+        <div className="flex flex-col items-center justify-center mt-20 text-gray-500 dark:text-gray-400">
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+            alt="no books"
+            className="w-28 mb-4 opacity-80"
+          />
+          <p className="text-lg font-medium">
+            Start searching to discover amazing books! 🔍
+          </p>
+        </div>
+      )}
+
+      {/* Footer */}
+      <footer className="text-center py-6 text-gray-600 dark:text-gray-400 mt-auto">
+        Built with ❤️ using <span className="font-semibold">React</span> &{" "}
+        <span className="font-semibold">TailwindCSS</span>
       </footer>
     </div>
   );
