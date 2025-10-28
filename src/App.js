@@ -7,6 +7,7 @@ function App() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [showGreeting, setShowGreeting] = useState(true);
 
   // Persist theme
   useEffect(() => {
@@ -18,6 +19,12 @@ function App() {
     document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
+
+  // Hide greeting after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowGreeting(false), 20000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -66,6 +73,15 @@ function App() {
           {darkMode ? "☀️" : "🌙"}
         </button>
       </header>
+
+      {/* ✨ Greeting */}
+      {showGreeting && (
+        <div className="flex justify-center mt-8 animate-fade-in">
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md px-6 py-3 rounded-xl shadow-md text-lg font-semibold text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+            👋 Welcome, <span className="text-indigo-600 dark:text-indigo-400">Alex!</span>
+          </div>
+        </div>
+      )}
 
       {/* Search Box */}
       <form
