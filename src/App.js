@@ -62,8 +62,8 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col transition-colors duration-500">
       {/* Header */}
       <header className="py-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-md text-center flex justify-between px-6 items-center">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md flex items-center gap-2">
-          📚 Book Finder
+        <h1 className="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md flex items-center gap-3">
+            <img src="/logo.png" alt="Book Finder Logo" className="w-12 h-12 rounded-full shadow-md border-2 border-white"/>Book Finder
         </h1>
         <button
           onClick={() => setDarkMode(!darkMode)}
