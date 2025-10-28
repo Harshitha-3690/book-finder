@@ -9,7 +9,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [showGreeting, setShowGreeting] = useState(true);
   const [error, setError] = useState("");
-  const [selectedBook, setSelectedBook] = useState(null); // 🔹 NEW
+  const [selectedBook, setSelectedBook] = useState(null);
 
   // Load saved theme
   useEffect(() => {
@@ -62,7 +62,14 @@ function App() {
         `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=20`
       );
       const data = await response.json();
-      setBooks(data.items || []);
+
+      // ✅ Handle no results found
+      if (!data.items || data.items.length === 0) {
+        setError("⚠️ No books found. Please try a different keyword!");
+        setBooks([]);
+      } else {
+        setBooks(data.items);
+      }
     } catch {
       setError("❌ Something went wrong. Please try again!");
     }
@@ -145,7 +152,7 @@ function App() {
             />
             <input
               type="text"
-              placeholder="📂 Subject (e.g. Science, Maths , History)"
+              placeholder="📂 Subject (e.g. Science, Maths, History, Coding)"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               className="border dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 p-2 rounded-md focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm"
@@ -176,7 +183,7 @@ function App() {
             return (
               <div
                 key={i}
-                onClick={() => setSelectedBook(info)} // 🔹 show modal
+                onClick={() => setSelectedBook(info)}
                 className="cursor-pointer bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-1 p-3 border border-gray-200 dark:border-gray-700"
               >
                 <img
